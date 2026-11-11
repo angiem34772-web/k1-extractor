@@ -8,6 +8,7 @@ from pathlib import Path
 
 from . import basis as basis_mod
 from .checks import ControlLine, Exception_, check_duplicates, check_k1, tie_out
+from .amounts import format_amount
 from .extract import K1Record, extract_folder
 from .report import write_workbook
 
@@ -71,11 +72,11 @@ def run(root: str | Path, opening_basis: str | Path | None = None, out: str | Pa
     for b in basis_lines:
         if b.gain_over_basis_731 > 0:
             exceptions.append(Exception_(b.tax_year, b.partner_id, "Basis", "WARN", "Distribution over basis",
-                                         f"Distributions exceed basis by {b.gain_over_basis_731:,.0f}; "
+                                         f"Distributions exceed basis by {format_amount(b.gain_over_basis_731)}; "
                                          f"possible section 731 gain"))
         if b.suspended_losses_out > 0:
             exceptions.append(Exception_(b.tax_year, b.partner_id, "Basis", "INFO", "Suspended losses",
-                                         f"{b.suspended_losses_out:,.0f} of losses carried forward (section 704(d))"))
+                                         f"{format_amount(b.suspended_losses_out)} of losses carried forward (section 704(d))"))
 
     if out:
         write_workbook(out, files=files, records=records, master=master, exceptions=exceptions,

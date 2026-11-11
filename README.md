@@ -73,10 +73,51 @@ Errors: 1
   2025 P-001 Item L foots: Ending capital 303,000 vs computed 302,900 (difference 100)
 ```
 
-That's the planted error: one K-1 misprints ending capital by $100. The K-1
-check catches it on the partner's own form, and the tie-out catches it again at
-the partnership level. Run `python -m k1_extractor.fake_k1s samples --no-errors`
-for data that ties cleanly.
+## What the flags look like
+
+The sample data has two errors **planted on purpose**, plus partners set up to
+hit the basis limits. Every flag below is expected:
+
+| Planted in the sample data | Check that catches it | Where it shows up |
+|---|---|---|
+| Partner Alpha's 2025 K-1 misprints ending capital by $100 | Item L foots | Exceptions (ERROR) |
+| The same $100, seen at the partnership level | Schedule M-2 tie-out | Control Totals (DIFF) |
+| Partner Beta's 2024 K-1 has the GAAP box checked | Capital method | Exceptions (WARN) |
+| The profits interest receives $1,100 more than its basis | Distribution over basis (section 731) | Exceptions (WARN) |
+| Losses larger than basis for Partner Gamma and the profits interest | Suspended losses (section 704(d)) | Exceptions (INFO) |
+| Those same partners' capital accounts go below zero | Negative capital | Exceptions (INFO) |
+
+The $100 misprint is caught twice: once on the partner's own K-1, and again
+when the K-1s are totaled and compared to the 1065.
+
+**Exceptions tab**, sorted errors first:
+
+![Exceptions tab](docs/images/exceptions-tab.png)
+
+**Control Totals tab**: every line ties except the planted $100.
+
+![Control Totals tab](docs/images/control-totals-tab.png)
+
+### Clean run
+
+The flags come from the data, not the tool. With the planted errors turned
+off, everything ties:
+
+```bash
+python -m k1_extractor.fake_k1s samples --no-errors
+python -m k1_extractor samples --opening-basis samples/opening_basis.csv
+```
+
+```
+K-1s extracted: 9  partners: 5
+Control totals that don't tie: 0
+Errors: 0
+```
+
+The basis flags (section 731 gain, suspended losses) still appear on a clean
+run, because they describe the partners' tax positions, not mistakes on the
+K-1s. Run `python -m k1_extractor.fake_k1s samples` to restore the planted
+errors.
 
 ### Folder layout
 

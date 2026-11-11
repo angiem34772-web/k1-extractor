@@ -18,6 +18,9 @@ STATUS_FILLS = {
     "WARN": PatternFill("solid", fgColor="FFEB9C"),
 }
 
+NOT_MONEY = ("year", "partner no", "pages", "k-1s found", "partner id", "master")
+SEVERITY_ORDER = {"ERROR": 0, "WARN": 1, "INFO": 2}
+
 DETAIL_COLUMNS = [
     "tax_year", "master_partner_no", "partner_id", "partner_name", "entity_type", "partnership_name",
     "partnership_ein", "final_k1", "amended_k1",
@@ -40,10 +43,14 @@ def _sheet(wb: Workbook, title: str, headers: list[str], rows: list[list], statu
     for i, h in enumerate(headers, start=1):
         width = max([len(str(h))] + [len(str(r[i - 1])) for r in rows if i - 1 < len(r)] or [10])
         ws.column_dimensions[get_column_letter(i)].width = min(max(width + 2, 10), 60)
-    for col_cells in ws.iter_cols(min_row=2):
-        for c in col_cells:
-            if isinstance(c.value, float):
-                c.number_format = "#,##0.00;(#,##0.00)" if abs(c.value) < 1000 and c.value % 1 else "#,##0;(#,##0)"
+    for i, h in enumerate(headers, start=1):
+        if any(word in str(h).lower() for word in NOT_MONEY):
+            continue
+        for row in ws.iter_rows(min_row=2, min_col=i, max_col=i):
+            c = row[0]
+            if isinstance(c.value, (int, float)) and not isinstance(c.value, bool):
+                whole = float(c.value).is_integer()
+                c.number_format = "#,##0;(#,##0)" if whole else "#,##0.00####;(#,##0.00####)"
     if status_col and status_col in headers:
         idx = headers.index(status_col) + 1
         for r in range(2, ws.max_row + 1):
@@ -102,7 +109,9 @@ def write_workbook(path: str | Path, *, files, records, master, exceptions, cont
     _sheet(wb, "Box Detail", ["Tax year", "Partner ID", "Box", "Code", "Amount", "Source"], coded)
 
     _sheet(wb, "Exceptions", ["Tax year", "Partner ID", "Source", "Severity", "Check", "Detail"],
-           [[e.year, e.partner_id, e.source, e.severity, e.check, e.detail] for e in exceptions],
+           [[e.year, e.partner_id, e.source, e.severity, e.check, e.detail]
+            for e in sorted(exceptions, key=lambda e: (SEVERITY_ORDER.get(e.severity, 9), e.year or 0,
+                                                       e.partner_id or ""))],
            status_col="Severity")
 
     _sheet(wb, "Control Totals", ["Tax year", "Area", "Item", "Per K-1s", "Per 1065", "Difference", "Status"],

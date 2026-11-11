@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+from .amounts import format_amount
 from .extract import K1Record
 
 TOLERANCE = 1.0  # dollars, for rounding
@@ -61,7 +62,7 @@ def check_k1(rec: K1Record, expected_year: int | None = None) -> list[Exception_
         diff = f["cap_end"] - computed
         if abs(diff) > TOLERANCE:
             add("ERROR", "Item L foots",
-                f"Ending capital {f['cap_end']:,.0f} vs computed {computed:,.0f} (difference {diff:,.0f})")
+                f"Ending capital {format_amount(f['cap_end'])} vs computed {format_amount(computed)} (difference {format_amount(diff)})")
 
     method = (f.get("capital_method") or "").lower()
     if method and "tax" not in method:
@@ -71,10 +72,10 @@ def check_k1(rec: K1Record, expected_year: int | None = None) -> list[Exception_
     dist_box = sum(v for k, v in rec.boxes.items() if k.startswith("19:"))
     if abs(dist_box - f.get("cap_withdrawals", 0)) > TOLERANCE:
         add("WARN", "Distributions",
-            f"Box 19 total {dist_box:,.0f} vs Item L withdrawals {f.get('cap_withdrawals', 0):,.0f}")
+            f"Box 19 total {format_amount(dist_box)} vs Item L withdrawals {format_amount(f.get('cap_withdrawals', 0))}")
 
     if f.get("cap_end", 0) < 0:
-        add("INFO", "Negative capital", f"Ending capital account is {f['cap_end']:,.0f}")
+        add("INFO", "Negative capital", f"Ending capital account is {format_amount(f['cap_end'])}")
 
     if f.get("final_k1") == "YES":
         add("INFO", "Final K-1", "Partner exited during the year")
