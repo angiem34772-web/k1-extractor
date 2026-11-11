@@ -1,0 +1,20 @@
+{
+  "partnership_name": "Harborview Sample Partners LP",
+  "partnership_ein": "00-0000000",
+  "k1_count": 5,
+  "schedule_k": {
+    "1": 400000,
+    "2": -100000,
+    "5": 10000,
+    "13:W": 8000,
+    "19:A": 200000
+  },
+  "schedule_m2": {
+    "beginning_capital": 398000,
+    "capital_contributed": 100000,
+    "net_income": 302000,
+    "distributions": 200000,
+    "ending_capital": 600000
+  },
+  "liabilities_end": 1050000
+}

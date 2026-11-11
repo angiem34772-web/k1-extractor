@@ -218,3 +218,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ---- Keep real tax data out of this repository ----
+# Only the fictional files in samples/ may be committed.
+*.pdf
+*.xlsx
+*.xls
+*.csv
+output/
+!samples/**/*.pdf
+!samples/**/*.csv
+!samples/*.csv
